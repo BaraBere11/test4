@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>AddStudent</title>
+    </head>
+    <body>
+        <div class = "center">
+        <h3>Student Infromation</h3>
+        <form name="addStudent" method = "post" 
+        enctype = "application/x-www-form-urlencoded"
+             action = "/addStudent">
+             <!-- enctype = "multipart/form-data" -->
+
+            <p> Student ID: <input type = "text" name = "studId"> </p>
+            <p> Name: <input type = "text" name = "name"> </p>
+            <label for="program">Program</label>
+                <select name="program">
+                        <option value="BSD">BSD</option>
+                        <option value="CPA">CPA</option>
+                        <option value="DSA">DSA</option>
+            </select>
+            <p> GPA: <input type = "text" name = "gpa"> </p>
+            <p> <input type = "submit" value = "Submit"> 
+                <input type = "reset"> </p>
+        </form>
+    </div>
+    </body>
+</html>

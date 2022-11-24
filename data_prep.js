@@ -2,39 +2,50 @@ var fs = require("fs");
 
 var students=[];
 
+const Sequelize = require('sequelize');
+
+var sequelize = new Sequelize('fwtcatjv', 'fwtcatjv', 'lmzSwFFbfL01KuZaHlTScvCW3gtlflxp', {
+    host: 'lucky.db.elephantsql.com',
+    dialect: 'postgres',
+    port: 5432,
+    dialectOptions: {
+    ssl: true
+   },
+   query:{raw: true} // update here, you. Need this
+   }); 
+
+   sequelize.authenticate().then(()=> console.log('Connection success.'))
+.catch((err)=>console.log("Unable to connect to DB.", err));
+
+var Student = sequelize.define('Student', {
+    StudId: {
+        type: Sequelize.INTEGER,
+        autoIncrement: true,
+        primaryKey: true
+    },
+    name: Sequelize.STRING,
+    program: Sequelize.STRING,
+    gpa: Sequelize.FLOAT
+});
+
 exports.prep = ()=>{
-
-   // console.log("Testing");
-
-   return new Promise((resolve, reject)=>{
-
-        fs.readFile("./students.json", (err, data)=>{
-
-            if (err) {reject("unable to read file.");}
-
-            students = JSON.parse(data);
-
-           // console.log(students);
-
-            resolve("File read success.");
-
-        }); 
-
-   });
-
+    return new Promise(function(resolve, reject) {
+        sequelize.sync().then(resolve()).catch(() =>reject("unable to sync the database"));
+    });
 };
 
 
 
 exports.bsd = ()=>{
 
-    return new Promise((resolve, reject)=>{
-
-       let results = students.filter(student => student.program == "BSD");
-
-       (results.length == 0)? reject("No BSD students."):resolve(results);
-
-    });
+    return new Promise(function(resolve, reject) {
+        Student.findAll({
+            where: {
+                program: 'BSD'
+            }
+        }).then(data => resolve(data))
+            .catch(() =>reject("no results returned."));
+    })
 
 }
 
@@ -44,13 +55,14 @@ exports.bsd = ()=>{
 
 exports.cpa = ()=>{
 
-    return new Promise((resolve, reject)=>{
-
-       let results = students.filter(student => student.program == "CPA");
-
-       (results.length == 0)? reject("No CPA students."):resolve(results);
-
-    });
+    return new Promise(function(resolve, reject) {
+        Student.findAll({
+            where: {
+                program: 'CPA'
+            }
+        }).then(data => resolve(data))
+            .catch(() =>reject("no results returned."));
+    })
 
 }
 
@@ -58,31 +70,11 @@ exports.highGPA = ()=>{
 
     return new Promise((resolve, reject)=>{
 
-        let high = 0;
-
-        let highStudent;
-
-        
-
-        for (let i=0; i<students.length; i++)
-
-        {
-
-            //console.log(students[i].gpa, high);
-
-            if (students[i].gpa > high)
-
-            {
-
-                high = students[i].gpa;
-
-                highStudent = students[i];
-
-            }
-
-        }
-
-        (highStudent) ? resolve(highStudent): reject("Failed finding student with highest GPA");
+        Student.findAll({
+            order: [
+                 ['gpa', 'DESC'],
+            ],
+        }).then((data) => resolve(data[0])).catch(() => console.log("unable"));
 
     }); 
 
@@ -94,27 +86,11 @@ exports.lowGPA = ()=>{
 
     return new Promise((resolve, reject)=>{
 
-        let low = 4.0;
-
-        let lowStudent;
-
-        for (let i=0; i<students.length; i++)
-
-        {
-
-            if (students[i].gpa < low)
-
-            {
-
-                low = students[i].gpa;
-
-                lowStudent = students[i];
-
-            }
-
-        }
-
-        resolve(lowStudent);
+        Student.findAll({
+            order: [
+                 ['gpa', 'ASC'],
+            ],
+        }).then((data) => resolve(data[0])).catch(() => console.log("unable"));
 
     }); 
 
@@ -124,16 +100,8 @@ exports.lowGPA = ()=>{
 
 exports.allStudents =()=>{
 
-    return new Promise((resolve, reject)=>{
-
-        if (students.length>0)
-
-        {
-
-            resolve(students);
-
-        } else reject("No students.");
-
+    return new Promise(function(resolve, reject) {
+        Student.findAll().then(data => resolve(data)).catch(() =>reject("no results returned"));
     })
 
 }
@@ -142,15 +110,14 @@ exports.allStudents =()=>{
 
 exports.addStudent= (stud)=>{
 
-    return new Promise((resolve, reject)=>{
-
-        stud.studId = students.length+1;
-
-        students.push(stud);
-
-        resolve();
-
-    });
+    return new Promise(function(resolve, reject) {
+        for (var i in stud) {
+        if (i == "") {
+            i = null;
+        }
+        }   
+        Student.create(stud).then(resolve()).catch(() => reject("unable to create student"));
+    })
 
 }
 
@@ -158,18 +125,13 @@ exports.addStudent= (stud)=>{
 
 exports.getStudent = (studId)=>{
 
-    return new Promise((resolve, reject)=>{
-
-        students.forEach(function(student){
-
-            if (student.studId == studId)
-
-                resolve(student);
-
-        });
-
-        reject("No result found!");
-
+    return new Promise(function(resolve, reject) {
+        Student.findOne({
+            where: {
+                StudId: studId
+            }
+        }).then(data => resolve(data))
+            .catch(() =>reject("no results returned."));
     })
 
 }
